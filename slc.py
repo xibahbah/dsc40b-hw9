@@ -23,7 +23,7 @@ class UnionFind:
 
 
 def slc(graph, d, k):
-    nodes = list(graph)
+    nodes = list(graph.nodes())
     uf = UnionFind(nodes)
     edges = list(graph.edges())
     edges.sort(key=d)
