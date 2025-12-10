@@ -1,43 +1,31 @@
-class UnionFind:
-    def __init__(self, items):
-        self.parent = {x: x for x in items}
-        self.rank = {x: 0 for x in items}
-
-    def find(self, x):
-        if self.parent[x] != x:
-            self.parent[x] = self.find(self.parent[x])
-        return self.parent[x]
-
-    def union(self, x, y):
-        rx, ry = self.find(x), self.find(y)
-        if rx == ry:
-            return False
-        if self.rank[rx] < self.rank[ry]:
-            self.parent[rx] = ry
-        elif self.rank[rx] > self.rank[ry]:
-            self.parent[ry] = rx
-        else:
-            self.parent[ry] = rx
-            self.rank[rx] += 1
-        return True
-
+from dsc40graph import UndirectedGraph
+from dsf import DisjointSetForest
 
 def slc(graph, d, k):
-    nodes = list(graph.nodes())
-    uf = UnionFind(nodes)
-    edges = list(graph.edges())
-    edges.sort(key=d)
-    clusters = len(nodes)
+    dsf = DisjointSetForest()
+    for node in graph.nodes:
+        dsf.make_set(node)
 
-    for u, v in edges:
-        if clusters == k:
+    edges = []
+    for u, v in graph.edges:
+        w = d((u, v))
+        edges.append((w, u, v))
+
+    edges.sort(key=lambda x: x[0])
+
+    num_clusters = len(graph.nodes)
+
+    for w, u, v in edges:
+        if num_clusters <= k:
             break
-        if uf.union(u, v):
-            clusters -= 1
+        if dsf.find(u) != dsf.find(v):
+            dsf.union(u, v)
+            num_clusters -= 1
 
-    groups = {}
-    for node in nodes:
-        r = uf.find(node)
-        groups.setdefault(r, set()).add(node)
+    clusters_dict = {}
+    for node in graph.nodes:
+        root = dsf.find(node)
+        clusters_dict.setdefault(root, set()).add(node)
 
-    return frozenset(frozenset(g) for g in groups.values())
+    clusters = frozenset(frozenset(nodes) for nodes in clusters_dict.values())
+    return clusters
